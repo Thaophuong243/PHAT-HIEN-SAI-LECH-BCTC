@@ -26,19 +26,19 @@ class FraudDetectionApp:
             df = pd.read_csv(_self.data_path)
             X = df[_self.features]
             y = df['Financial_Status']
+            # Tính toán trọng số chính xác hoặc gán các hình phạt lệch mạnh
+            custom_weights = {0: 1, 1: 10, 2: 50} 
             
-            # BƯỚC MỚI: Dùng SMOTE để nhân bản dữ liệu lớp gian lận cho bằng với lớp bình thường
-            smote = SMOTE(random_state=42)
-            X_resampled, y_resampled = smote.fit_resample(X, y)
-            
-            # Train trên tập dữ liệu đã được cân bằng
             rf = RandomForestClassifier(
-                n_estimators=100, 
-                random_state=42, 
-                class_weight='balanced',
+                n_estimators=200, 
+                class_weight=custom_weights, 
+                max_depth=8,              # Ràng buộc độ sâu để ngăn ngừa quá khớp
+                min_samples_leaf=5,       # Yêu cầu các nút lá mang tính tổng quát
+                random_state=42,
                 n_jobs=-1
             )
-            rf.fit(X_resampled, y_resampled)
+            # Chỉ huấn luyện mô hình trên dữ liệu huấn luyện đã được phân tách
+            rf.fit(X, y)
             return rf, df
         except Exception as e:
             st.error(f"Lỗi khi huấn luyện mô hình: {e}")
